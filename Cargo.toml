@@ -1,0 +1,5 @@
+[workspace]
+members = [ "DSP_Tester",
+    "plotter",
+]
+resolver = "2"
