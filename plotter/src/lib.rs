@@ -6,7 +6,7 @@ const RESOLUTION : (u32, u32) = (2048, 1280);
 const WIDTH : u32 = 4;
 const P_SIZE: u32 = 6;
 
-pub fn plot_data(x: &[f32], y: &[f32], title: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn plot_data(x: &[f32], y: &[f32], title: &str, (x_axis, y_axis): (&str, &str)) -> Result<(), Box<dyn std::error::Error>> {
     let filename = &format!("{}.png", title.split(" ").collect::<Vec<&str>>().join("_"));
     let backend = BitMapBackend::new(filename, RESOLUTION).into_drawing_area();
     backend.fill(&WHITE)?;
@@ -17,7 +17,12 @@ pub fn plot_data(x: &[f32], y: &[f32], title: &str) -> Result<(), Box<dyn std::e
         .x_label_area_size(30)
         .y_label_area_size(30)
         .build_cartesian_2d(x[0]..*x.last().unwrap(), min..max)?;
-    chart.configure_mesh().draw()?;
+    chart
+        .configure_mesh()
+        .axis_desc_style(("sans-serif", 24))
+        .x_desc(x_axis)
+        .y_desc(y_axis)
+        .draw()?;
     let data = x.iter().zip(y.iter()).map(|(&x, &y)| (x, y));
     chart.draw_series(LineSeries::new(
             data,
