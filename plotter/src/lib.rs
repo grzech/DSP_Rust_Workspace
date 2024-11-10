@@ -4,30 +4,28 @@ use plotters::prelude::*;
 
 const RESOLUTION : (u32, u32) = (2048, 1280);
 const WIDTH : u32 = 4;
-const P_SIZE: u32 = 6;
 
-pub fn plot_data(x: &[f32], y: &[f32], title: &str, (x_axis, y_axis): (&str, &str)) -> Result<(), Box<dyn std::error::Error>> {
+pub fn plot_data(data: &[(f32, f32)], title: &str, (x_axis, y_axis): (&str, &str)) -> Result<(), Box<dyn std::error::Error>> {
+    let x_rng = (data[0].0, data.last().unwrap().0);
+    let y_rng = get_min_max(&data.iter().map(|(_, d)| *d).collect::<Vec<f32>>());
     let filename = &format!("{}.png", title.split(" ").collect::<Vec<&str>>().join("_"));
     let backend = BitMapBackend::new(filename, RESOLUTION).into_drawing_area();
     backend.fill(&WHITE)?;
-    let (min, max) = get_min_max(y);
     let mut chart = ChartBuilder::on(&backend)
         .caption(title, ("sans-serif", 50).into_font())
         .margin(15)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(x[0]..*x.last().unwrap(), min..max)?;
+        .build_cartesian_2d(x_rng.0..x_rng.1, y_rng.0..y_rng.1)?;
     chart
         .configure_mesh()
         .axis_desc_style(("sans-serif", 24))
         .x_desc(x_axis)
         .y_desc(y_axis)
         .draw()?;
-    let data = x.iter().zip(y.iter()).map(|(&x, &y)| (x, y));
     chart.draw_series(LineSeries::new(
-            data,
-            MAGENTA.stroke_width(WIDTH).filled(),
-        ).point_size(P_SIZE))?
+            data.into_iter().map(|(x, y)| (*x, *y)),
+            MAGENTA.stroke_width(WIDTH)))?
         .label(title)
         .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
 

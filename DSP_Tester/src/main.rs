@@ -1,5 +1,7 @@
 use plotter::plot_data;
+use DspLib::generators;
 
 fn main() {
-    plot_data(&[1.0, 2.1, 3.3, 4.5], &[1.1, 2.2, 3.3, 4.4],  "Test Plot", ("Time [s]", "Value [?]")).unwrap();
+    let sine = generators::generate_sine(3.0, 10.0, 5.0, 200.0);
+    plot_data(&sine,  "Test Plot", ("Time [s]", "Value")).unwrap();
 }

@@ -1,5 +1,6 @@
 [workspace]
 members = [ "DSP_Tester",
-    "plotter",
-]
+            "DspLib",
+            "plotter",
+          ]
 resolver = "2"
