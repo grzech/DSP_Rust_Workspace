@@ -4,6 +4,7 @@ use plotters::prelude::*;
 
 const RESOLUTION : (u32, u32) = (2048, 1280);
 const WIDTH : u32 = 4;
+const P_SIZE: u32 = 6;
 
 pub fn plot_data(data: &[(f64, f64)], title: &str, (x_axis, y_axis): (&str, &str)) -> Result<(), Box<dyn std::error::Error>> {
     let x_rng = (data[0].0, data.last().unwrap().0);
@@ -25,7 +26,8 @@ pub fn plot_data(data: &[(f64, f64)], title: &str, (x_axis, y_axis): (&str, &str
         .draw()?;
     chart.draw_series(LineSeries::new(
             data.into_iter().map(|(x, y)| (*x, *y)),
-            MAGENTA.stroke_width(WIDTH)))?
+            MAGENTA.stroke_width(WIDTH).filled(),
+        ).point_size(P_SIZE))?
         .label(title)
         .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
 

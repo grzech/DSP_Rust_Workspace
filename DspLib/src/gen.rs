@@ -1,20 +1,21 @@
 use std::f64::consts::PI;
 
 trait SignalShape {
-    fn function(x: f64) -> f64;
-    fn generate_signal(amplitude: f64,
+    fn function(&mut self, x: f64) -> f64;
+    fn generate_signal(&mut self, amplitude: f64,
                        frequency: f64,
                        number_of_periods: f64,
                        sampling_rate: f64,
                        phase_shift: f64) -> DescreteSignal
     {
         let mut signal = DescreteSignal::new();
-        let step = frequency / sampling_rate;
-        let end = phase_shift + number_of_periods;
-        let mut x = phase_shift;
+        let step = 1.0/sampling_rate;
+        let mut x = phase_shift/frequency;
+        let end = number_of_periods/frequency + x;
 
+        println!("Step by {step} from {x} to {end}");
         while x < end {
-            signal.push(x, Self::function(x) * amplitude);
+            signal.push(x, self.function(x) * amplitude);
             x += step;
         }
         
@@ -22,11 +23,13 @@ trait SignalShape {
     }
 }
 
-enum SineWave {}
+struct SineWave {
+    frequency: f64,
+}
 
 impl SignalShape for SineWave {
-    fn function(x: f64) -> f64 {
-        (x * 2.0 * PI).sin()
+    fn function(&mut self, x: f64) -> f64 {
+        (x * self.frequency * 2.0 * PI).sin()
     }
 }
 
@@ -67,11 +70,12 @@ impl Default for Generator {
 
 impl Generator {
     pub fn generate(&mut self) -> &[(f64, f64)] {
-        self.signal = SineWave::generate_signal(self.amplitude,
-                                                self.frequency,
-                                                self.periods,
-                                                self.sampling_rate,
-                                                self.phase);
+        let mut shape = SineWave{frequency: self.frequency};
+        self.signal = shape.generate_signal(self.amplitude,
+                                            self.frequency,
+                                            self.periods,
+                                            self.sampling_rate,
+                                            self.phase);
         &self.signal.data
     }
 
