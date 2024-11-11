@@ -1,5 +1,5 @@
 use plotter::plot_data;
-use DspLib::Generator;
+use dsp_lib::Generator;
 
 fn main() {
     let mut sine = Generator::default()

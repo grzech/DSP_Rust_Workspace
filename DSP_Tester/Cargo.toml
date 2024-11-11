@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 plotter = {path = "../plotter"}
-DspLib = {path = "../DspLib"}
+dsp_lib = {path = "../DspLib"}
