@@ -4,11 +4,20 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run Test",
+            "label": "Run Test App",
             "type": "shell",
             "command": "cargo run -p DSP_Tester",
             "group": {
                 "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Unit Tests",
+            "type": "shell",
+            "command": "cargo test",
+            "group": {
+                "kind": "test",
                 "isDefault": true
             }
         }
