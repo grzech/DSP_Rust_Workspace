@@ -1,5 +1,5 @@
 mod gen;
-pub use gen::generators;
+pub use gen::Generator;
 
 #[cfg(test)]
 mod tests {

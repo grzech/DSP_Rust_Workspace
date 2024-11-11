@@ -1,13 +1,13 @@
-use core::f32;
+use core::f64;
 
 use plotters::prelude::*;
 
 const RESOLUTION : (u32, u32) = (2048, 1280);
 const WIDTH : u32 = 4;
 
-pub fn plot_data(data: &[(f32, f32)], title: &str, (x_axis, y_axis): (&str, &str)) -> Result<(), Box<dyn std::error::Error>> {
+pub fn plot_data(data: &[(f64, f64)], title: &str, (x_axis, y_axis): (&str, &str)) -> Result<(), Box<dyn std::error::Error>> {
     let x_rng = (data[0].0, data.last().unwrap().0);
-    let y_rng = get_min_max(&data.iter().map(|(_, d)| *d).collect::<Vec<f32>>());
+    let y_rng = get_min_max(&data.iter().map(|(_, d)| *d).collect::<Vec<f64>>());
     let filename = &format!("{}.png", title.split(" ").collect::<Vec<&str>>().join("_"));
     let backend = BitMapBackend::new(filename, RESOLUTION).into_drawing_area();
     backend.fill(&WHITE)?;
@@ -38,9 +38,9 @@ pub fn plot_data(data: &[(f32, f32)], title: &str, (x_axis, y_axis): (&str, &str
     Ok(())
 }
 
-fn get_min_max(data: &[f32]) -> (f32, f32) {
-    let mut min = f32::MAX;
-    let mut max = f32::MIN;
+fn get_min_max(data: &[f64]) -> (f64, f64) {
+    let mut min = f64::MAX;
+    let mut max = f64::MIN;
     for x in data {
         if *x > max {
             max = *x;
