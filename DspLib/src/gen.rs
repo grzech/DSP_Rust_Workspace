@@ -33,8 +33,19 @@ impl SignalShape for SineWave {
     }
 }
 
+
 pub struct DescreteSignal {
     data: Vec<(f64, f64)>,
+}
+
+impl Clone for DescreteSignal {
+    fn clone(&self) -> Self {
+        let mut data = vec![];
+        for d in self.data.iter() {
+            data.push(*d);
+        }
+        DescreteSignal{data}
+    }
 }
 
 impl DescreteSignal {
@@ -44,6 +55,10 @@ impl DescreteSignal {
 
     pub fn push(&mut self, x: f64, y: f64) {
         self.data.push((x, y));
+    }
+
+    pub fn get_data(&self) -> &[(f64, f64)] {
+        &self.data
     }
 
     fn get_approximation_coeficients((x1, y1): (f64, f64),
@@ -95,36 +110,36 @@ impl DescreteSignal {
     }
 }
 
-impl Add<DescreteSignal> for DescreteSignal {
+impl Add<&[(f64, f64)]> for &DescreteSignal {
     type Output = DescreteSignal;
 
-    fn add(self, rhs: DescreteSignal) -> Self::Output {
+    fn add(self, rhs: &[(f64, f64)]) -> Self::Output {
         let mut ret = DescreteSignal::new();
         let mut l = 0;
         let mut r = 0;
 
-        if self.data[l].0 > rhs.data[r].0 {
-            r = ret.add_data_until_stamp(&rhs.data, r, self.data[0].0);
+        if self.data[l].0 > rhs[r].0 {
+            r = ret.add_data_until_stamp(rhs, r, self.data[0].0);
         } else {
-            l = ret.add_data_until_stamp(&self.data, l, rhs.data[0].0);
+            l = ret.add_data_until_stamp(&self.data, l, rhs[0].0);
         }
 
-        while l < self.data.len() && r < rhs.data.len() {
-            if self.data[l].0 == rhs.data[r].0 {
-                ret.push(self.data[l].0, self.data[l].1 + rhs.data[r].1);
+        while l < self.data.len() && r < rhs.len() {
+            if self.data[l].0 == rhs[r].0 {
+                ret.push(self.data[l].0, self.data[l].1 + rhs[r].1);
                 l += 1;
                 r += 1;
-            } else if self.data[l].0 > rhs.data[r].0 {
-                r = ret.insert_data(&rhs.data, r, (self.data[l-1], self.data[l]));
+            } else if self.data[l].0 > rhs[r].0 {
+                r = ret.insert_data(rhs, r, (self.data[l-1], self.data[l]));
             } else {
-                l = ret.insert_data(&self.data, l, (rhs.data[r-1], rhs.data[r]));
+                l = ret.insert_data(&self.data, l, (rhs[r-1], rhs[r]));
             }
         }
 
         if self.data.len() > l {
             ret.add_data(&self.data, l);
         } else {
-            ret.add_data(&rhs.data, r);
+            ret.add_data(rhs, r);
         }
 
         ret
@@ -155,14 +170,14 @@ impl Default for Generator {
 }
 
 impl Generator {
-    pub fn generate(&mut self) -> &[(f64, f64)] {
+    pub fn generate(&mut self) -> DescreteSignal {
         let mut shape = SineWave{frequency: self.frequency};
         self.signal = shape.generate_signal(self.amplitude,
                                             self.frequency,
                                             self.periods,
                                             self.sampling_rate,
                                             self.phase);
-        &self.signal.data
+        self.signal.clone()
     }
 
     pub fn set_amplitude(mut self, amp: f64) -> Self {
@@ -263,7 +278,7 @@ mod tests {
         let second = DescreteSignal{data: vec![(0.0, 0.1), (0.01, 11.3), (0.02, 4.78)]};
         let sum = vec![(0.0, 0.1), (0.01, 11.3), (0.02, 4.78), (0.1, 0.0), (0.2, 300.0), (0.3, 45.22)];
         
-        assert_eq!((first + second).data, sum);
+        assert_eq!((first + second.get_data()).data, sum);
     }
 
     #[test]
@@ -272,7 +287,7 @@ mod tests {
         let second = DescreteSignal{data: vec![(0.5, 0.1), (0.51, 11.3), (0.52, 4.78)]};
         let sum = vec![(0.1, 0.0), (0.2, 300.0), (0.3, 45.22), (0.5, 0.1), (0.51, 11.3), (0.52, 4.78)];
         
-        assert_eq!((first + second).data, sum);
+        assert_eq!((first + second.get_data()).data, sum);
     }
 
     #[test]
@@ -281,7 +296,7 @@ mod tests {
         let second = DescreteSignal{data: vec![(0.0, 0.1), (0.1, 11.3), (1.5, 4.78)]};
         let sum = vec![(0.0, 0.1), (0.1, 311.3), (1.5, 50.0)];
         
-        assert_eq!((first + second).data, sum);
+        assert_eq!((first + second.get_data().).data, sum);
     }
 
     #[test]
@@ -290,7 +305,7 @@ mod tests {
         let second = DescreteSignal{data: vec![(1.0, 2.0), (2.0, 4.0), (3.0, 6.0)]};
         let sum = vec![(0.0, 0.0), (1.0, 12.0), (2.0, 24.0), (2.25, 27.0), (2.5, 30.0), (2.75, 33.0), (3.0, 6.0)];
         
-        assert_eq!((first + second).data, sum);
+        assert_eq!((first + second.get_data()).data, sum);
     }
 
     #[test]
@@ -299,6 +314,6 @@ mod tests {
         let second = DescreteSignal{data: vec![(0.0, 2.0), (0.1, 3.0), (0.2, 4.0), (3.3, 35.0), (3.6, 38.0), (4.1, 43.0)]};
         let sum = vec![(0.0, 3.0), (0.1, 5.0), (0.2, 7.0), (1.0, 23.0), (2.0, 43.0), (3.0, 63.00000000000001), (3.3, 69.0), (3.6, 75.0), (4.0, 83.0), (4.1, 43.0)];
         
-        assert_eq!((first + second).data, sum);
+        assert_eq!((first + second.get_data()).data, sum);
     }
 }

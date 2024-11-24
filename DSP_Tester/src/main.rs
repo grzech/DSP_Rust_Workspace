@@ -1,12 +1,23 @@
 use plotter::plot_data;
-use dsp_lib::Generator;
+use dsp_lib::{Generator, DescreteSignal};
 
 fn main() {
-    let mut sine = Generator::default()
-        .set_phase_shift(0.75)
-        .set_amplitude(11.34)
-        .set_number_of_periods(2.67)
-        .set_frequency(1000.0)
-        .set_sampling_rate(20000.0);
-    plot_data(sine.generate(),  "Test Plot", ("Time [s]", "Value")).unwrap();
+    let mut sig = Generator::default()
+    //.set_phase_shift(0.5*PI)
+        .set_amplitude(1.0)
+        .set_number_of_periods(3.0)
+        .set_frequency(1.0)
+        .set_sampling_rate(20.0)
+        .generate();
+    
+    for i in (3..41).step_by(2) {
+        let sine = Generator::default()
+            .set_amplitude(1.0/i as f64)
+            .set_number_of_periods(3.0 * i as f64)
+            .set_frequency(1.0 * i as f64)
+            .set_sampling_rate(20.0 * i as f64)
+            .generate();
+        sig = &sig + sine.get_data();
+        plot_data(sig.get_data(), &format!("{}_harmonics", i/2 + 1), ("Signal value", "time [s]")).unwrap();
+    }
 }
