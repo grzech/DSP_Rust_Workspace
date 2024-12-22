@@ -53,12 +53,20 @@ impl DescreteSignal {
         Self{data: Vec::new()}
     }
 
+    pub fn new_from_vec(data: Vec<(f64, f64)>) -> Self {
+        Self{data}
+    }
+
     pub fn push(&mut self, x: f64, y: f64) {
         self.data.push((x, y));
     }
 
     pub fn get_data(&self) -> &[(f64, f64)] {
         &self.data
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
     }
 
     fn get_approximation_coeficients((x1, y1): (f64, f64),
