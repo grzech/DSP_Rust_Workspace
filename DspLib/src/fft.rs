@@ -9,27 +9,25 @@ use std::f64::consts::PI;
 struct Fft {
     /// Number of samples in signal
     n: usize,
-    /// Constant part of sine argument - kept as field to perform this calculation only once
-    two_pi_by_n: f64,
-    /// w_N is a vector of cos(2*pi*k*n/N) - jsin(2*pi*k*n/N) - this vector should be limited to
-    /// length of N. All entries that stisfy condition k1*n1 = k2*n2 (even if k1 != k2) shall not
-    /// be calculated again.
-    wn: Vec<ComplexNumber>,
     /// s_nk is vector of multiplication results for s[n] * w_n[n*k]. It is simple way to implement
     /// butterfly diagram for fft.
     snk: Vec<Vec<ComplexNumber>>,
+    /// Resolution of fourier transform
+    resolution: f64,
 }
 
 pub fn fft(signal: &DescreteSignal, spectrum: &mut DescreteSignal) {
     let params = Fft::new(signal);
+    let mut x = 0.0;
 
-    for i in 0..params.n/60 {
-        let x = i as f64;
+    for i in 0..params.n/2 {
         let mut y = ComplexNumber::default();
+
         for j in 0..params.n {
             y = &y + &params.snk[(i*j)%params.n][j];
         }
         spectrum.push(x, y.module());
+        x += params.resolution;
     }
 }
 
@@ -40,6 +38,7 @@ impl Fft {
         let mut wn = vec![ComplexNumber::default(); n];
         let mut snk= vec![vec![ComplexNumber::default(); n]; n];
         let data = signal.get_data();
+        let fs = 1.0/(signal.get_data()[1].0 - signal.get_data()[0].0);
 
         for i in 0..n {
             wn[i] = ComplexNumber::new(f64::cos(two_pi_by_n*i as f64),
@@ -48,7 +47,7 @@ impl Fft {
                 snk[i][k] = &wn[i] * &data[k].1;
             }
         }
-        Fft{n, two_pi_by_n, wn, snk}
+        Fft{n, snk, resolution: fs/n as f64}
     }
 }
 
@@ -75,8 +74,16 @@ mod tests {
         let (sig, fourier) = create_fft_from_vector(&data, period);
         assert_eq!(sig.get_data(), expected_signal.get_data());
         assert_eq!(fourier.n, expected_fourier.n);
-        assert_eq!(fourier.wn, expected_fourier.wn);
         assert_eq!(fourier.snk, expected_fourier.snk);
+    }
+
+    #[test]
+    fn frequency_resolution_shall_be_equal_to_sampling_rate_divided_by_number_of_samples() {
+        let signal = DescreteSignal::new_from_vec(vec![(0.1, 5.0), (0.2, 4.0), (0.3, 3.0), (0.4, 2.0)]);
+        let fft_object = Fft::new(&signal);
+        let expected_resolution = 1.0/(0.1*4.0);
+
+        assert_eq!(fft_object.resolution, expected_resolution);
     }
 
     #[test]
@@ -84,22 +91,8 @@ mod tests {
         let signal = DescreteSignal::new_from_vec(vec![(1.0, 5.0), (2.0, 4.0), (3.0, 3.0), (4.0, 2.0), (5.0, 1.0)]);
         let fft_object = Fft::new(&signal);
         assert_eq!(fft_object.n, signal.len());
-        assert_eq!(fft_object.two_pi_by_n, 2.0*PI/signal.len() as f64);
-        assert_eq!(fft_object.wn.len(), signal.len());
         assert_eq!(fft_object.snk.len(), signal.len());
         assert_eq!(fft_object.snk[0].len(), signal.len());
-    }
-
-    #[test]
-    fn constructor_shall_generate_wn_coefficients() {
-        let (_, fft_object) = create_fft_from_vector(&[0.0, 0.5, 1.0, 1.5, 2.0], 1.0);
-        let expected_wn = [
-            ComplexNumber::new(1.0, 0.0),
-            ComplexNumber::new((2.0*PI/5.0).cos(), -1.0*(2.0*PI/5.0).sin()),
-            ComplexNumber::new((4.0*PI/5.0).cos(), -1.0*(4.0*PI/5.0).sin()),
-            ComplexNumber::new((6.0*PI/5.0).cos(), -1.0*(6.0*PI/5.0).sin()),
-            ComplexNumber::new((8.0*PI/5.0).cos(), -1.0*(8.0*PI/5.0).sin())];
-        assert_eq!(fft_object.wn, expected_wn);
     }
 
     #[test]

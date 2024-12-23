@@ -20,6 +20,12 @@
                 "kind": "test",
                 "isDefault": true
             }
+        },
+        {
+            "label": "Clean workspace",
+            "type": "shell",
+            "command": "rm *.png",
+            "problemMatcher": []
         }
     ]
 }
