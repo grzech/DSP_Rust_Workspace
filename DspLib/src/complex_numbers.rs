@@ -48,10 +48,10 @@ impl Mul<&ComplexNumber> for &ComplexNumber {
 }
 
 
-impl Mul<&f64> for &ComplexNumber {
+impl Mul<f64> for &ComplexNumber {
     type Output = ComplexNumber;
 
-    fn mul(self, other: &f64) -> ComplexNumber {
+    fn mul(self, other: f64) -> ComplexNumber {
         ComplexNumber(self.0 * other, self.1 * other)
     }
 }
@@ -140,7 +140,7 @@ mod tests {
         let input = (6.1, 84.5);
         let mul = 3.6;
         let c1 = ComplexNumber::new(input.0, input.1);
-        let c3 = &c1 * &mul;
+        let c3 = &c1 * mul;
         assert_eq!(c3.re(), input.0 * mul);
         assert_eq!(c3.im(), input.1 * mul);
     }

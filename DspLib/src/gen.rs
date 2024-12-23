@@ -7,7 +7,8 @@ trait SignalShape {
                        frequency: f64,
                        number_of_periods: f64,
                        sampling_rate: f64,
-                       phase_shift: f64) -> DescreteSignal
+                       phase_shift: f64,
+                       offset: f64) -> DescreteSignal
     {
         let mut signal = DescreteSignal::new();
         let step = 1.0/sampling_rate;
@@ -15,7 +16,7 @@ trait SignalShape {
         let end = number_of_periods/frequency + x;
 
         while x < end {
-            signal.push(x, self.function(x) * amplitude);
+            signal.push(x, self.function(x) * amplitude + offset);
             x += step;
         }
         
@@ -163,6 +164,7 @@ pub struct Generator{
     periods: f64,
     phase: f64,
     sampling_rate: f64,
+    offset: f64,
 }
 
 impl Default for Generator {
@@ -173,6 +175,7 @@ impl Default for Generator {
              periods: 1.0,
              phase: 0.0,
              sampling_rate: 20.0,
+             offset: 0.0
         }
     }
 }
@@ -184,12 +187,18 @@ impl Generator {
                                             self.frequency,
                                             self.periods,
                                             self.sampling_rate,
-                                            self.phase);
+                                            self.phase,
+                                            self.offset);
         self.signal.clone()
     }
 
     pub fn set_amplitude(mut self, amp: f64) -> Self {
         self.amplitude = amp;
+        self
+    }
+
+    pub fn set_offset(mut self, offset: f64) -> Self {
+        self.offset = offset;
         self
     }
 

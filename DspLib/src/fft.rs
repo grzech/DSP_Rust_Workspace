@@ -26,6 +26,9 @@ pub fn fft(signal: &DescreteSignal, spectrum: &mut DescreteSignal) {
         for j in 0..params.n {
             y = &y + &params.snk[(i*j)%params.n][j];
         }
+        if i == 0 {
+            y = &y * 0.5;
+        }
         spectrum.push(x, y.module() * scale_factor);
         x += params.resolution;
     }
@@ -44,7 +47,7 @@ impl Fft {
             wn[i] = ComplexNumber::new(f64::cos(two_pi_by_n*i as f64),
                                       -1.0*f64::sin(two_pi_by_n*i as f64));
             for k in 0..n {
-                snk[i][k] = &wn[i] * &data[k].1;
+                snk[i][k] = &wn[i] * data[k].1;
             }
         }
         Fft{n, snk, resolution: fs/n as f64}
@@ -103,13 +106,27 @@ mod tests {
             [ComplexNumber::new(data[0], 0.0),
              ComplexNumber::new(data[1], 0.0),
              ComplexNumber::new(data[2], 0.0)],
-            [&ComplexNumber::new((2.0*PI/3.0).cos(), -1.0*(2.0*PI/3.0).sin()) * &data[0],
-             &ComplexNumber::new((2.0*PI/3.0).cos(), -1.0*(2.0*PI/3.0).sin()) * &data[1],
-             &ComplexNumber::new((2.0*PI/3.0).cos(), -1.0*(2.0*PI/3.0).sin()) * &data[2]],
-            [&ComplexNumber::new((4.0*PI/3.0).cos(), -1.0*(4.0*PI/3.0).sin()) * &data[0],
-             &ComplexNumber::new((4.0*PI/3.0).cos(), -1.0*(4.0*PI/3.0).sin()) * &data[1],
-             &ComplexNumber::new((4.0*PI/3.0).cos(), -1.0*(4.0*PI/3.0).sin()) * &data[2]]
+            [&ComplexNumber::new((2.0*PI/3.0).cos(), -1.0*(2.0*PI/3.0).sin()) * data[0],
+             &ComplexNumber::new((2.0*PI/3.0).cos(), -1.0*(2.0*PI/3.0).sin()) * data[1],
+             &ComplexNumber::new((2.0*PI/3.0).cos(), -1.0*(2.0*PI/3.0).sin()) * data[2]],
+            [&ComplexNumber::new((4.0*PI/3.0).cos(), -1.0*(4.0*PI/3.0).sin()) * data[0],
+             &ComplexNumber::new((4.0*PI/3.0).cos(), -1.0*(4.0*PI/3.0).sin()) * data[1],
+             &ComplexNumber::new((4.0*PI/3.0).cos(), -1.0*(4.0*PI/3.0).sin()) * data[2]]
             ];
         assert_eq!(fft_object.snk, expected_snk);
+    }
+
+    #[test]
+    fn check_fft_result() {
+        let signal = DescreteSignal::new_from_vec(
+            vec![(0.0, 2.0), (0.001, 1.0), (0.002, 0.0), (0.003, 1.0),
+                      (0.004, 2.0), (0.005, 1.0), (0.006, 0.0), (0.007, 1.0)]);
+        let expected_fft = DescreteSignal::new_from_vec(
+            vec![(0.0, 1.0), (125.0, 8.326672684688674e-17),
+                      (250.0, 1.0), (375.0, 8.326672684688674e-17)]);
+        let mut calculated_fft = DescreteSignal::new();
+
+        fft(&signal, &mut calculated_fft);
+        assert_eq!(calculated_fft.get_data(), expected_fft.get_data());
     }
 }
