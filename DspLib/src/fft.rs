@@ -19,14 +19,14 @@ struct Fft {
 pub fn fft(signal: &DescreteSignal, spectrum: &mut DescreteSignal) {
     let params = Fft::new(signal);
     let mut x = 0.0;
-
+    let scale_factor = 2.0/params.n as f64;
     for i in 0..params.n/2 {
         let mut y = ComplexNumber::default();
 
         for j in 0..params.n {
             y = &y + &params.snk[(i*j)%params.n][j];
         }
-        spectrum.push(x, y.module());
+        spectrum.push(x, y.module() * scale_factor);
         x += params.resolution;
     }
 }
