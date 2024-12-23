@@ -280,6 +280,16 @@ mod tests {
     }
 
     #[test]
+    fn check_set_offset() {
+        let mut gen = Generator::default();
+
+        for offset in [0.1, 1.3, -35.33, -6.9, 11.3] {
+            gen = gen.set_offset(offset);
+            assert_eq!(gen.offset, offset);
+        }
+    }
+
+    #[test]
     fn check_set_sampling_rate() {
         let mut gen = Generator::default();
 
