@@ -1,6 +1,11 @@
 use std::f64::consts::PI;
 use std::ops::Add;
 
+enum WaveShape {
+    Sine,
+    Rectangle,
+}
+
 trait SignalShape {
     fn function(&mut self, x: f64) -> f64;
     fn generate_signal(&mut self, amplitude: f64,
@@ -28,12 +33,27 @@ struct SineWave {
     frequency: f64,
 }
 
+struct RectangleWave {
+    period: f64,
+    high_phase: f64,
+}
+
 impl SignalShape for SineWave {
     fn function(&mut self, x: f64) -> f64 {
         (x * self.frequency * 2.0 * PI).sin()
     }
 }
 
+impl SignalShape for RectangleWave {
+    fn function(&mut self, x: f64) -> f64 {
+        let phase = x % self.period;
+        if phase > self.high_phase {
+            -1.0
+        } else {
+            1.0
+        }
+    }
+}
 
 pub struct DescreteSignal {
     data: Vec<(f64, f64)>,
@@ -157,7 +177,7 @@ impl Add<&DescreteSignal> for &DescreteSignal {
 
 }
 
-pub struct Generator{
+pub struct Generator {
     signal: DescreteSignal,
     amplitude: f64,
     frequency: f64,
@@ -165,6 +185,7 @@ pub struct Generator{
     phase: f64,
     sampling_rate: f64,
     offset: f64,
+    shape: WaveShape,
 }
 
 impl Default for Generator {
@@ -175,14 +196,18 @@ impl Default for Generator {
              periods: 1.0,
              phase: 0.0,
              sampling_rate: 20.0,
-             offset: 0.0
+             offset: 0.0,
+             shape: WaveShape::Sine
         }
     }
 }
 
 impl Generator {
     pub fn generate(&mut self) -> DescreteSignal {
-        let mut shape = SineWave{frequency: self.frequency};
+        let mut shape: Box<dyn SignalShape> = match self.shape {
+            WaveShape::Sine => Box::new(SineWave{frequency: self.frequency}),
+            WaveShape::Rectangle => Box::new(RectangleWave{period: 1.0/self.frequency, high_phase: 0.5}),
+        };
         self.signal = shape.generate_signal(self.amplitude,
                                             self.frequency,
                                             self.periods,
@@ -190,6 +215,16 @@ impl Generator {
                                             self.phase,
                                             self.offset);
         self.signal.clone()
+    }
+
+    pub fn sine_wave(mut self) -> Self {
+        self.shape = WaveShape::Sine;
+        self
+    }
+
+    pub fn rectangle_wave(mut self) -> Self {
+        self.shape = WaveShape::Rectangle;
+        self
     }
 
     pub fn set_amplitude(mut self, amp: f64) -> Self {
