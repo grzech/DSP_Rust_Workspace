@@ -6,7 +6,7 @@ use std::f64::consts::PI;
 /// Some of multiplication operations are repeateble, so to avoid operations duplication values
 /// are being kept in vectors that are indexed such way all duplicated operations will have the
 /// same index and will be stored only once.
-struct Fft {
+struct FftParams {
     /// Number of samples in signal
     n: usize,
     /// s_nk is vector of multiplication results for s[n] * w_n[n*k]. It is simple way to implement
@@ -17,7 +17,7 @@ struct Fft {
 }
 
 pub fn fft(signal: &DescreteSignal, spectrum: &mut DescreteSignal) {
-    let params = Fft::new(signal);
+    let params = FftParams::new(signal);
     let mut x = 0.0;
     let scale_factor = 2.0/params.n as f64;
     for i in 0..params.n/2 {
@@ -34,7 +34,7 @@ pub fn fft(signal: &DescreteSignal, spectrum: &mut DescreteSignal) {
     }
 }
 
-impl Fft {
+impl FftParams {
     fn new(signal: &DescreteSignal) -> Self {
         let n = signal.len();
         let two_pi_by_n = 2.0 * PI/n as f64;
@@ -50,7 +50,7 @@ impl Fft {
                 snk[i][k] = &wn[i] * data[k].1;
             }
         }
-        Fft{n, snk, resolution: fs/n as f64}
+        FftParams{n, snk, resolution: fs/n as f64}
     }
 }
 
@@ -58,13 +58,13 @@ impl Fft {
 mod tests {
     use super::*;
 
-    fn create_fft_from_vector(data: &[f64], sampling_period: f64) -> (DescreteSignal, Fft) {
+    fn create_fft_from_vector(data: &[f64], sampling_period: f64) -> (DescreteSignal, FftParams) {
         let mut signal = vec![(0.0, 0.0); data.len()];
         for (i, d) in data.iter().enumerate() {
             signal[i] = (i as f64 * sampling_period, *d);
         }
         let signal = DescreteSignal::new_from_vec(signal);
-        let fourier = Fft::new(&signal);
+        let fourier = FftParams::new(&signal);
         (signal, fourier)
     }
 
@@ -73,7 +73,7 @@ mod tests {
         let data = vec![3.46, 4.32, 0.32, -12214.23];
         let period = 0.32;
         let expected_signal = DescreteSignal::new_from_vec(vec![(0.0, 3.46), (0.32, 4.32), (0.64, 0.32), (0.96, -12214.23)]);
-        let expected_fourier = Fft::new(&expected_signal);
+        let expected_fourier = FftParams::new(&expected_signal);
         let (sig, fourier) = create_fft_from_vector(&data, period);
         assert_eq!(sig.get_data(), expected_signal.get_data());
         assert_eq!(fourier.n, expected_fourier.n);
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn frequency_resolution_shall_be_equal_to_sampling_rate_divided_by_number_of_samples() {
         let signal = DescreteSignal::new_from_vec(vec![(0.1, 5.0), (0.2, 4.0), (0.3, 3.0), (0.4, 2.0)]);
-        let fft_object = Fft::new(&signal);
+        let fft_object = FftParams::new(&signal);
         let expected_resolution = 1.0/(0.1*4.0);
 
         assert_eq!(fft_object.resolution, expected_resolution);
@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn constructor_shall_generate_vectors_of_specific_length() {
         let signal = DescreteSignal::new_from_vec(vec![(1.0, 5.0), (2.0, 4.0), (3.0, 3.0), (4.0, 2.0), (5.0, 1.0)]);
-        let fft_object = Fft::new(&signal);
+        let fft_object = FftParams::new(&signal);
         assert_eq!(fft_object.n, signal.len());
         assert_eq!(fft_object.snk.len(), signal.len());
         assert_eq!(fft_object.snk[0].len(), signal.len());
