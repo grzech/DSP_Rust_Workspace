@@ -1,12 +1,7 @@
 use std::f64::consts::PI;
 use crate::DescreteSignal;
 
-enum WaveShape {
-    Sine,
-    Rectangle,
-}
-
-trait SignalShape {
+pub trait SignalShape {
     fn function(&mut self, x: f64) -> f64;
     fn generate_signal(&mut self, amplitude: f64,
                        frequency: f64,
@@ -29,11 +24,11 @@ trait SignalShape {
     }
 }
 
-struct SineWave {
+pub struct SineWave {
     frequency: f64,
 }
 
-struct RectangleWave {
+pub struct RectangleWave {
     period: f64,
     high_phase: f64,
 }
@@ -55,7 +50,7 @@ impl SignalShape for RectangleWave {
     }
 }
 
-pub struct Generator {
+pub struct Generator<S: SignalShape> {
     signal: DescreteSignal,
     amplitude: f64,
     frequency: f64,
@@ -63,30 +58,29 @@ pub struct Generator {
     phase: f64,
     sampling_rate: f64,
     offset: f64,
-    shape: WaveShape,
+    shape: S,
 }
 
-impl Default for Generator {
-    fn default() -> Self {
+const DEFAULT_SAMPLING: f64 = 20.0;
+
+impl Default for Generator<SineWave> {
+    fn default() -> Generator<SineWave> {
+        let freq = 1.0;
         Self{signal: DescreteSignal::new(),
              amplitude: 1.0,
-             frequency: 1.0,
+             frequency: freq,
              periods: 1.0,
              phase: 0.0,
-             sampling_rate: 20.0,
+             sampling_rate: DEFAULT_SAMPLING,
              offset: 0.0,
-             shape: WaveShape::Sine
+             shape: SineWave{frequency: freq}
         }
     }
 }
 
-impl Generator {
+impl<S: SignalShape> Generator<S> {
     pub fn generate(&mut self) -> DescreteSignal {
-        let mut shape: Box<dyn SignalShape> = match self.shape {
-            WaveShape::Sine => Box::new(SineWave{frequency: self.frequency}),
-            WaveShape::Rectangle => Box::new(RectangleWave{period: 1.0/self.frequency, high_phase: 0.5}),
-        };
-        self.signal = shape.generate_signal(self.amplitude,
+        self.signal = self.shape.generate_signal(self.amplitude,
                                             self.frequency,
                                             self.periods,
                                             self.sampling_rate,
@@ -95,14 +89,32 @@ impl Generator {
         self.signal.clone()
     }
 
-    pub fn sine_wave(mut self) -> Self {
-        self.shape = WaveShape::Sine;
-        self
+    pub fn sine_wave(frequency: f64) -> Generator<SineWave> {
+        Generator {
+            signal: DescreteSignal::new(),
+            amplitude: 1.0,
+            frequency: frequency,
+            periods: 1.0,
+            phase: 0.0,
+            sampling_rate: DEFAULT_SAMPLING * frequency,
+            offset: 0.0,
+            shape: SineWave{frequency}
+       }
     }
 
-    pub fn rectangle_wave(mut self) -> Self {
-        self.shape = WaveShape::Rectangle;
-        self
+    pub fn rectangle_wave(frequency: f64, duty_cycle: f64) -> Generator<RectangleWave> {
+        let period = 1.0/frequency;
+
+        Generator {
+            signal: DescreteSignal::new(),
+            amplitude: 1.0,
+            frequency: frequency,
+            periods: 1.0,
+            phase: 0.0,
+            sampling_rate: DEFAULT_SAMPLING * frequency,
+            offset: 0.0,
+            shape: RectangleWave{period, high_phase: duty_cycle * period}
+       }
     }
 
     pub fn set_amplitude(mut self, amp: f64) -> Self {
@@ -112,11 +124,6 @@ impl Generator {
 
     pub fn set_offset(mut self, offset: f64) -> Self {
         self.offset = offset;
-        self
-    }
-
-    pub fn set_frequency(mut self, freq: f64) -> Self {
-        self.frequency = freq;
         self
     }
 
@@ -148,7 +155,7 @@ mod tests {
         assert_eq!(gen.frequency, 1.0);
         assert_eq!(gen.periods, 1.0);
         assert_eq!(gen.phase, 0.0);
-        assert_eq!(gen.sampling_rate, 20.0);
+        assert_eq!(gen.sampling_rate, DEFAULT_SAMPLING);
         assert_eq!(gen.signal.get_data(), Vec::new());
     }
 
@@ -159,16 +166,6 @@ mod tests {
         for amp in [13.55, 4311.3, -32.33, 124121.444, -32490.33] {
             gen = gen.set_amplitude(amp);
             assert_eq!(gen.amplitude, amp);
-        }
-    }
-
-    #[test]
-    fn check_set_frequency() {
-        let mut gen = Generator::default();
-
-        for freq in [13.55, 4311.3, -32.33, 124121.444, -32490.33] {
-            gen = gen.set_frequency(freq);
-            assert_eq!(gen.frequency, freq);
         }
     }
 
