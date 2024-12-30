@@ -5,7 +5,7 @@ fn main() {
     let num_of_periods = 7.0;
     let sampling_rate = 100.0;
     
-    let mut sig = Generator::<SineWave>::sine_wave(1.0)
+    let mut sig = Generator::sine_wave(1.0)
     //.set_phase_shift(0.5*PI)
         .set_amplitude(1.0)
         .set_number_of_periods(num_of_periods)
@@ -14,7 +14,7 @@ fn main() {
         .generate();
 
     for i in (3..26).step_by(2) {
-        let sine = Generator::<SineWave>::sine_wave(i as f64)
+        let sine = Generator::sine_wave(i as f64)
             .set_amplitude(1.0/i as f64)
             .set_number_of_periods(num_of_periods * i as f64)
             .set_sampling_rate(sampling_rate)
@@ -28,8 +28,10 @@ fn main() {
     let sig = Generator::<RectangleWave>::rectangle_wave(1.0, 0.5)
         .set_amplitude(0.78)
         .set_sampling_rate(100.0)
-        .set_offset(0.0)
+        .set_offset(0.3)
+        .set_phase_shift(0.5)
         .set_number_of_periods(5.0)
+        .set_duty_cycle(0.1)
         .generate();
     plot_data(sig.get_data(), &format!("Rectangle Wave"), ("Signal value", "time [s]")).unwrap();
     let mut fourier = DescreteSignal::new();

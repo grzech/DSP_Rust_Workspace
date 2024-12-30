@@ -30,6 +30,7 @@ pub struct SineWave {
 
 pub struct RectangleWave {
     period: f64,
+    duty_cycle: f64,
     high_phase: f64,
 }
 
@@ -78,19 +79,9 @@ impl Default for Generator<SineWave> {
     }
 }
 
-impl<S: SignalShape> Generator<S> {
-    pub fn generate(&mut self) -> DescreteSignal {
-        self.signal = self.shape.generate_signal(self.amplitude,
-                                            self.frequency,
-                                            self.periods,
-                                            self.sampling_rate,
-                                            self.phase,
-                                            self.offset);
-        self.signal.clone()
-    }
-
-    pub fn sine_wave(frequency: f64) -> Generator<SineWave> {
-        Generator {
+impl Generator<SineWave> {
+    pub fn sine_wave(frequency: f64) -> Self {
+        Self {
             signal: DescreteSignal::new(),
             amplitude: 1.0,
             frequency: frequency,
@@ -102,6 +93,14 @@ impl<S: SignalShape> Generator<S> {
        }
     }
 
+    pub fn set_frequency(mut self, frequency: f64) -> Self {
+        self.frequency = frequency;
+        self.shape.frequency = frequency;
+        self
+    }
+}
+
+impl Generator<RectangleWave> {
     pub fn rectangle_wave(frequency: f64, duty_cycle: f64) -> Generator<RectangleWave> {
         let period = 1.0/frequency;
 
@@ -113,8 +112,34 @@ impl<S: SignalShape> Generator<S> {
             phase: 0.0,
             sampling_rate: DEFAULT_SAMPLING * frequency,
             offset: 0.0,
-            shape: RectangleWave{period, high_phase: duty_cycle * period}
+            shape: RectangleWave{period, duty_cycle, high_phase: duty_cycle * period}
        }
+    }
+
+    pub fn set_frequency(mut self, frequency: f64) -> Self {
+        let period = 1.0/frequency;
+        self.frequency = frequency;
+        self.shape.period = period;
+        self.shape.high_phase = self.shape.duty_cycle * period;
+        self
+    }
+
+    pub fn set_duty_cycle(mut self, duty_cycle: f64) -> Self {
+        self.shape.duty_cycle = duty_cycle;
+        self.shape.high_phase = self.shape.duty_cycle * self.shape.period;
+        self
+    }
+}
+
+impl<S: SignalShape> Generator<S> {
+    pub fn generate(&mut self) -> DescreteSignal {
+        self.signal = self.shape.generate_signal(self.amplitude,
+                                            self.frequency,
+                                            self.periods,
+                                            self.sampling_rate,
+                                            self.phase,
+                                            self.offset);
+        self.signal.clone()
     }
 
     pub fn set_amplitude(mut self, amp: f64) -> Self {
