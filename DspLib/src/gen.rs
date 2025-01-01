@@ -64,21 +64,6 @@ pub struct Generator<S: SignalShape> {
 
 const DEFAULT_SAMPLING: f64 = 20.0;
 
-impl Default for Generator<SineWave> {
-    fn default() -> Generator<SineWave> {
-        let freq = 1.0;
-        Self{signal: DescreteSignal::new(),
-             amplitude: 1.0,
-             frequency: freq,
-             periods: 1.0,
-             phase: 0.0,
-             sampling_rate: DEFAULT_SAMPLING,
-             offset: 0.0,
-             shape: SineWave{frequency: freq}
-        }
-    }
-}
-
 impl Generator<SineWave> {
     pub fn sine_wave(frequency: f64) -> Self {
         Self {
@@ -173,20 +158,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn check_default_values() {
-        let gen = Generator::default();
-
-        assert_eq!(gen.amplitude, 1.0);
-        assert_eq!(gen.frequency, 1.0);
-        assert_eq!(gen.periods, 1.0);
-        assert_eq!(gen.phase, 0.0);
-        assert_eq!(gen.sampling_rate, DEFAULT_SAMPLING);
-        assert_eq!(gen.signal.get_data(), Vec::new());
-    }
-
-    #[test]
     fn check_set_amplitude() {
-        let mut gen = Generator::default();
+        let mut gen = Generator::sine_wave(1.0);
 
         for amp in [13.55, 4311.3, -32.33, 124121.444, -32490.33] {
             gen = gen.set_amplitude(amp);
@@ -196,7 +169,7 @@ mod tests {
 
     #[test]
     fn check_set_phase() {
-        let mut gen = Generator::default();
+        let mut gen = Generator::sine_wave(1.0);
 
         for ph in [13.55, 4311.3, -32.33, 124121.444, -32490.33] {
             gen = gen.set_phase_shift(ph);
@@ -206,7 +179,7 @@ mod tests {
 
     #[test]
     fn check_set_periods() {
-        let mut gen = Generator::default();
+        let mut gen = Generator::sine_wave(1.0);
 
         for period in [13.55, 4311.3, -32.33, 124121.444, -32490.33] {
             gen = gen.set_number_of_periods(period);
@@ -216,7 +189,7 @@ mod tests {
 
     #[test]
     fn check_set_offset() {
-        let mut gen = Generator::default();
+        let mut gen = Generator::sine_wave(1.0);
 
         for offset in [0.1, 1.3, -35.33, -6.9, 11.3] {
             gen = gen.set_offset(offset);
@@ -226,11 +199,59 @@ mod tests {
 
     #[test]
     fn check_set_sampling_rate() {
-        let mut gen = Generator::default();
+        let mut gen = Generator::sine_wave(1.0);
 
         for rate in [13.55, 4311.3, -32.33, 124121.444, -32490.33] {
             gen = gen.set_sampling_rate(rate);
             assert_eq!(gen.sampling_rate, rate);
+        }
+    }
+
+    #[test]
+    fn check_set_frequency() {
+        let mut gen = Generator::sine_wave(1.0);
+
+        for freq in [13.55, 4311.3, -32.33, 124121.444, -32490.33] {
+            gen = gen.set_frequency(freq);
+            assert_eq!(gen.frequency, freq);
+            assert_eq!(gen.shape.frequency, freq);
+        }
+    }
+
+    #[test]
+    fn check_rectangle_shape_parameters() {
+        let freq = 0.25;
+        let duty = 0.75;
+        let gen = Generator::rectangle_wave(freq, duty);
+
+        assert_eq!(gen.shape.duty_cycle, duty);
+        assert_eq!(gen.shape.period, 1.0/freq);
+        assert_eq!(gen.shape.high_phase, duty/freq);
+    }
+
+    #[test]
+    fn check_set_duty_cycle() {
+        let freq = 0.1;
+        let mut gen = Generator::rectangle_wave(freq, 0.5);
+
+        for duty in [0.1, 0.2, 0.25, 0.5] {
+            gen = gen.set_duty_cycle(duty);
+            assert_eq!(gen.shape.duty_cycle, duty);
+            assert_eq!(gen.shape.high_phase, duty/freq);
+        }
+    }
+
+    #[test]
+    fn check_set_frequency_for_rectangle() {
+        let duty = 0.1;
+        let mut gen = Generator::rectangle_wave(1.0, duty);
+
+        for freq in [0.1, 0.02, 0.0025, 0.0005] {
+            gen = gen.set_frequency(freq);
+            assert_eq!(gen.frequency, freq);
+            assert_eq!(gen.shape.period, 1.0/freq);
+            assert_eq!(gen.shape.duty_cycle, duty);
+            assert_eq!(gen.shape.high_phase, duty/freq);
         }
     }
 }

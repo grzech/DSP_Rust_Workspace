@@ -1,12 +1,11 @@
 use plotter::plot_data;
-use dsp_lib::{fft, DescreteSignal, Generator, SineWave, RectangleWave};
+use dsp_lib::{fft, DescreteSignal, Generator};
 
 fn main() {
     let num_of_periods = 7.0;
     let sampling_rate = 100.0;
     
     let mut sig = Generator::sine_wave(1.0)
-    //.set_phase_shift(0.5*PI)
         .set_amplitude(1.0)
         .set_number_of_periods(num_of_periods)
         .set_sampling_rate(sampling_rate)
@@ -25,7 +24,7 @@ fn main() {
     let mut fourier = DescreteSignal::new();
     fft(&sig, &mut fourier);
     plot_data(fourier.get_data(), &format!("Fast_Fourier_Transform_for_Sum_of_harmonics"), ("Frequency [Hz]", "Amplitude")).unwrap();
-    let sig = Generator::<RectangleWave>::rectangle_wave(1.0, 0.5)
+    let sig = Generator::rectangle_wave(1.0, 0.5)
         .set_amplitude(0.78)
         .set_sampling_rate(100.0)
         .set_offset(0.3)
