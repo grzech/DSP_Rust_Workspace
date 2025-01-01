@@ -35,6 +35,10 @@ impl DescreteSignal {
         self.data.len()
     }
 
+    pub fn clear(&mut self) {
+        self.data = vec![];
+    }
+
     fn get_approximation_coeficients((x1, y1): (f64, f64),
                                      (x2, y2): (f64, f64)) -> (f64, f64)
     {
@@ -161,5 +165,13 @@ mod tests {
         let sum = vec![(0.0, 3.0), (0.1, 5.0), (0.2, 7.0), (1.0, 23.0), (2.0, 43.0), (3.0, 63.00000000000001), (3.3, 69.0), (3.6, 75.0), (4.0, 83.0), (4.1, 43.0)];
         
         assert_eq!((&first + &second).data, sum);
+    }
+
+    #[test]
+    fn clear_should_delete_all_data() {
+        let mut signal = DescreteSignal{data: vec![(0.0, 0.0), (1.0, 10.0), (2.25, 22.5), (2.5, 25.0), (2.75, 27.5)]};
+        assert_ne!(signal.data.len(), 0);
+        signal.clear();
+        assert_eq!(signal.data, vec![]);
     }
 }

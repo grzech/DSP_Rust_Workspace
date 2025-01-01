@@ -24,6 +24,11 @@ pub trait SignalShape {
     }
 }
 
+pub struct TriangleWave {
+    period: f64,
+    slope: f64,
+}
+
 pub struct SineWave {
     frequency: f64,
 }
@@ -32,6 +37,19 @@ pub struct RectangleWave {
     period: f64,
     duty_cycle: f64,
     high_phase: f64,
+}
+
+impl SignalShape for TriangleWave {
+    fn function(&mut self, x: f64) -> f64 {
+        let phase = x % self.period;
+        if phase < self.period * 0.25 {
+            return phase * self.slope;
+        } else if phase < self.period * 0.75 {
+            return 2.0 - phase * self.slope;
+        } else {
+            return phase * self.slope - 4.0;
+        }
+    }
 }
 
 impl SignalShape for SineWave {
@@ -112,6 +130,28 @@ impl Generator<RectangleWave> {
     pub fn set_duty_cycle(mut self, duty_cycle: f64) -> Self {
         self.shape.duty_cycle = duty_cycle;
         self.shape.high_phase = self.shape.duty_cycle * self.shape.period;
+        self
+    }
+}
+
+impl Generator<TriangleWave> {
+    pub fn triangle_wave(frequency: f64) -> Generator<TriangleWave> {
+        Generator {
+            signal: DescreteSignal::new(),
+            amplitude: 1.0,
+            frequency: frequency,
+            periods: 1.0,
+            phase: 0.0,
+            sampling_rate: DEFAULT_SAMPLING * frequency,
+            offset: 0.0,
+            shape: TriangleWave{period: 1.0 / frequency, slope: frequency * 4.0}
+       }
+    }
+
+    pub fn set_frequency(mut self, frequency: f64) -> Self {
+        self.frequency = frequency;
+        self.shape.period = 1.0 / frequency;
+        self.shape.slope = frequency * 4.0;
         self
     }
 }
@@ -252,6 +292,28 @@ mod tests {
             assert_eq!(gen.shape.period, 1.0/freq);
             assert_eq!(gen.shape.duty_cycle, duty);
             assert_eq!(gen.shape.high_phase, duty/freq);
+        }
+    }
+
+    #[test]
+    fn check_triangle_shape_parameters() {
+        let freq = 1213.432;
+        let gen = Generator::triangle_wave(freq);
+
+        assert_eq!(gen.shape.period, 1.0 / freq);
+        assert_eq!(gen.shape.slope, freq * 4.0);
+    }
+
+
+    #[test]
+    fn check_set_frequency_for_triangle() {
+        let mut gen = Generator::triangle_wave(1.0);
+
+        for freq in [0.1, 0.02, 0.0025, 0.0005] {
+            gen = gen.set_frequency(freq);
+            assert_eq!(gen.frequency, freq);
+            assert_eq!(gen.shape.period, 1.0/freq);
+            assert_eq!(gen.shape.slope, 4.0*freq);
         }
     }
 }

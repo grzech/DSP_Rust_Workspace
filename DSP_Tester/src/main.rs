@@ -33,8 +33,20 @@ fn main() {
         .set_duty_cycle(0.1)
         .generate();
     plot_data(sig.get_data(), &format!("Rectangle Wave"), ("Signal value", "time [s]")).unwrap();
-    let mut fourier = DescreteSignal::new();
+    fourier.clear();
     fft(&sig, &mut fourier);
-    plot_data(fourier.get_data(), &format!("Fast_Fourier_Transform_for_Rectangle wave"), ("Frequency [Hz]", "Amplitude")).unwrap();
+    plot_data(fourier.get_data(), &format!("Fast_Fourier_Transform_for_Rectangle_wave"), ("Frequency [Hz]", "Amplitude")).unwrap();
+
+    let sig = Generator::triangle_wave(1.0)
+        .set_amplitude(30.0)
+        .set_sampling_rate(100.0)
+        .set_offset(100.0)
+        .set_number_of_periods(3.0)
+        .set_frequency(5.0)
+        .generate();
+    plot_data(sig.get_data(), &format!("Triangle Wave"), ("Signal value", "time [s]")).unwrap();
+    fourier.clear();
+    fft(&sig, &mut fourier);
+    plot_data(fourier.get_data(), &format!("Fast_Fourier_Transform_for_Triangle_wave"), ("Frequency [Hz]", "Amplitude")).unwrap();
 
 }
