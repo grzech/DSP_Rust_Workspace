@@ -40,7 +40,7 @@ impl FftParams {
         let two_pi_by_n = 2.0 * PI/n as f64;
         let mut wn = vec![ComplexNumber::default(); n];
         let mut snk= vec![vec![ComplexNumber::default(); n]; n];
-        let fs = 1.0/(signal[1].0 - signal[0].0);
+        let fs = 1.0/signal.get_sampling_period();
 
         for i in 0..n {
             wn[i] = ComplexNumber::new(f64::cos(two_pi_by_n*i as f64),

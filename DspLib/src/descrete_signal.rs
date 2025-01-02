@@ -48,6 +48,10 @@ impl DescreteSignal {
         self.data = vec![];
     }
 
+    pub fn get_sampling_period(&self) -> f64 {
+        self.data[1].0 - self.data[0].0
+    }
+
     fn get_approximation_coeficients((x1, y1): (f64, f64),
                                      (x2, y2): (f64, f64)) -> (f64, f64)
     {
@@ -196,5 +200,17 @@ mod tests {
         for (i, d) in data.into_iter().enumerate() {
             assert_eq!(signal[i], d);
         }
+    }
+
+    #[test]
+    fn get_sampling_period_shall_return_differnce_between_consecutive_timestamps() {
+        let ts = 1.241;
+        let mut data = vec![];
+        for i in 0..2 {
+            data.push((ts * i as f64, 0.0));
+        }
+        let signal = DescreteSignal::new_from_vec(data);
+        
+        assert_eq!(signal.get_sampling_period(), ts);
     }
 }
