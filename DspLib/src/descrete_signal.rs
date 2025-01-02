@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Index};
 
 pub struct DescreteSignal {
     data: Vec<(f64, f64)>,
@@ -11,6 +11,15 @@ impl Clone for DescreteSignal {
             data.push(*d);
         }
         DescreteSignal{data}
+    }
+}
+
+impl Index<usize> for DescreteSignal {
+
+    type Output = (f64, f64);
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
     }
 }
 
@@ -173,5 +182,19 @@ mod tests {
         assert_ne!(signal.data.len(), 0);
         signal.clear();
         assert_eq!(signal.data, vec![]);
+    }
+
+    #[test]
+    fn descrete_signal_shall_be_indexable() {
+        let data = vec![(0.0, 0.0), (1.0, 10.0), (2.25, 22.5), (2.5, 25.0), (2.75, 27.5)];
+        let mut signal = DescreteSignal::new();
+
+        for &(x, y) in &data {
+            signal.push(x, y);
+        }
+        
+        for (i, d) in data.into_iter().enumerate() {
+            assert_eq!(signal[i], d);
+        }
     }
 }

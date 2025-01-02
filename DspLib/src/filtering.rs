@@ -4,10 +4,10 @@ pub fn fir_filter(signal: &DescreteSignal, fir: &Vec<f64>, output: &mut Descrete
     for n in (fir.len()-1)..signal.len(){
         let mut y = 0.0;
         for (i, h) in fir.iter().enumerate() {
-            y += h * signal.get_data()[n-i].1;
+            y += h * signal[n-i].1;
         }
 
-        output.push(signal.get_data()[n+1-fir.len()].0, y);
+        output.push(signal[n+1-fir.len()].0, y);
     }
 }
 

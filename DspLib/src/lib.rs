@@ -11,6 +11,6 @@ pub use filtering::fir_filter;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    //use super::*;
 
 }

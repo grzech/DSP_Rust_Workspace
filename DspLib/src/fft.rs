@@ -40,14 +40,13 @@ impl FftParams {
         let two_pi_by_n = 2.0 * PI/n as f64;
         let mut wn = vec![ComplexNumber::default(); n];
         let mut snk= vec![vec![ComplexNumber::default(); n]; n];
-        let data = signal.get_data();
-        let fs = 1.0/(signal.get_data()[1].0 - signal.get_data()[0].0);
+        let fs = 1.0/(signal[1].0 - signal[0].0);
 
         for i in 0..n {
             wn[i] = ComplexNumber::new(f64::cos(two_pi_by_n*i as f64),
                                       -1.0*f64::sin(two_pi_by_n*i as f64));
             for k in 0..n {
-                snk[i][k] = &wn[i] * data[k].1;
+                snk[i][k] = &wn[i] * signal[k].1;
             }
         }
         FftParams{n, snk, resolution: fs/n as f64}
