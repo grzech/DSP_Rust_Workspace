@@ -1,13 +1,41 @@
+use std::f64::consts::PI;
+
 use crate::DescreteSignal;
 
-pub fn fir_filter(signal: &DescreteSignal, fir: &Vec<f64>, output: &mut DescreteSignal) {
+pub fn fir_filter(signal: &DescreteSignal, fir: &[f64], output: &mut DescreteSignal) {
     for n in (fir.len()-1)..signal.len(){
         let mut y = 0.0;
         for (i, h) in fir.iter().enumerate() {
             y += h * signal[n-i].1;
         }
-
         output.push(signal[n+1-fir.len()].0, y);
+    }
+}
+
+pub fn get_averaging_fir_coefficients(size: usize, fir: &mut [f64]) {
+    let len = if size >= fir.len() {
+        size
+    }else {
+        fir.len()
+    };
+
+    for i in 0..len {
+        fir[i] = 1.0/len as f64;
+    }
+}
+
+pub fn get_low_pass_fir_coefficients(size: usize, fir: &mut [f64]) {
+    let freq = 1000.0;
+    let len = if size > fir.len() {
+        fir.len()
+    }else {
+        size
+    };
+
+    
+    for i in 1..=len {
+        let arg = i as f64 / (0.2*freq*(len as f64));
+        fir[i-1] = 2.0 * freq * (2.0 * PI * freq * arg).sin()/(2.0 * PI * freq * arg);
     }
 }
 

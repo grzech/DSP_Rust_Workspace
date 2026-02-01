@@ -39,6 +39,8 @@ pub struct RectangleWave {
     high_phase: f64,
 }
 
+pub struct DiracDelta {}
+
 impl SignalShape for TriangleWave {
     fn function(&mut self, x: f64) -> f64 {
         let phase = x % self.period;
@@ -65,6 +67,16 @@ impl SignalShape for RectangleWave {
             -1.0
         } else {
             1.0
+        }
+    }
+}
+
+impl SignalShape for DiracDelta {
+    fn function(&mut self, x: f64) -> f64 {
+        if x == 0.0 {
+            return 1.0;
+        } else {
+            return 0.0;
         }
     }
 }
@@ -153,6 +165,21 @@ impl Generator<TriangleWave> {
         self.shape.period = 1.0 / frequency;
         self.shape.slope = frequency * 4.0;
         self
+    }
+}
+
+impl Generator<DiracDelta> {
+    pub fn dirac_delta() -> Generator<DiracDelta> {
+        Generator {
+            signal: DescreteSignal::new(),
+            amplitude: f64::MAX,
+            frequency: 1.0,
+            periods: 1.0,
+            phase: 0.0,
+            sampling_rate: DEFAULT_SAMPLING,
+            offset: 0.0,
+            shape: DiracDelta{}
+       }
     }
 }
 
